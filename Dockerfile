@@ -5,13 +5,8 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y ffmpeg git && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .
-
 RUN pip install --upgrade pip setuptools wheel
-RUN pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu
-RUN pip install --no-cache-dir openai-whisper
 RUN pip install --no-cache-dir -r requirements.txt
-
-RUN python -c "import whisper; whisper.load_model('medium')"
 
 COPY . .
 

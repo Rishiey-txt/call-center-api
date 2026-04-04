@@ -1,16 +1,8 @@
 import base64
 import os
 import uuid
-import whisper
+from groq import Groq
 from src.config import settings
-
-_model = None
-
-def get_model():
-    global _model
-    if _model is None:
-        _model = whisper.load_model(settings.WHISPER_MODEL)
-    return _model
 
 LANG_MAP = {
     "Hindi": "hi",
@@ -26,16 +18,19 @@ def transcribe(audio_base64: str, language: str) -> str:
         with open(tmp_path, "wb") as f:
             f.write(audio_bytes)
 
-        model = get_model()
-        result = model.transcribe(
-            tmp_path,
-            language=lang_code,
-            task="transcribe",
-            fp16=False,
-        )
-        transcript = result.get("text", "").strip()
+        client = Groq(api_key=settings.GROQ_API_KEY)
+
+        with open(tmp_path, "rb") as audio_file:
+            transcription = client.audio.transcriptions.create(
+                file=(tmp_path, audio_file.read()),
+                model="whisper-large-v3",
+                language=lang_code,
+                response_format="text",
+            )
+
+        transcript = transcription.strip() if isinstance(transcription, str) else transcription.text.strip()
         if not transcript:
-            raise RuntimeError("Whisper returned empty transcript")
+            raise RuntimeError("Groq returned empty transcript")
         return transcript
 
     except Exception as e:
