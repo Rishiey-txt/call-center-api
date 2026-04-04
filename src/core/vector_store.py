@@ -1,5 +1,5 @@
 import chromadb
-from chromadb.utils import embedding_functions
+from chromadb.utils.embedding_functions import ONNXMiniLM_L6_V2
 from src.config import settings
 
 _collection = None
@@ -7,9 +7,7 @@ _collection = None
 def init_vector_store():
     global _collection
     client = chromadb.PersistentClient(path=settings.CHROMA_PATH)
-    ef = embedding_functions.SentenceTransformerEmbeddingFunction(
-        model_name="paraphrase-multilingual-MiniLM-L12-v2"
-    )
+    ef = ONNXMiniLM_L6_V2()
     _collection = client.get_or_create_collection(
         name="call_transcripts",
         embedding_function=ef,
