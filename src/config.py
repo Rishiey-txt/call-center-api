@@ -1,28 +1,42 @@
-from pydantic_settings import BaseSettings
+import os
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
 
 class Settings(BaseSettings):
-    # Auth
-    API_KEY: str = "default_key"
+    # --- Core API ---
+    API_KEY: str
 
-    # Database
-    DATABASE_URL: str = "postgresql+asyncpg://user:pass@localhost:5432/callcenter"
+    # --- Database ---
+    DATABASE_URL: str
 
-    # Redis / Celery
-    REDIS_URL: str = "redis://localhost:6379"
-    CELERY_TASK_ALWAYS_EAGER: bool = True   # sync mode for hackathon
+    # --- Redis / Celery ---
+    REDIS_URL: str
+    CELERY_TASK_ALWAYS_EAGER: bool = True
 
-    # AI Models
-    GROQ_API_KEY: str = ""
-    GEMINI_API_KEY: str = ""
-    ANTHROPIC_API_KEY: str = ""
-    OPENAI_API_KEY: str = ""        # for Whisper API fallback
-    WHISPER_MODEL: str = "medium"   # fallbacks if GPU available
-    USE_WHISPER_API: bool = False   # True = use OpenAI API, False = local
-
-    # Vector Store
+    # --- Storage ---
     CHROMA_PATH: str = "./chroma_db"
 
-    class Config:
-        env_file = ".env"
+    # --- Models ---
+    WHISPER_MODEL: str = "medium"
 
+    # --- LLM Keys ---
+    GEMINI_API_KEY: str
+    GROQ_API_KEY: str | None = None  # optional fallback
+
+    # --- Pydantic Config ---
+    model_config = SettingsConfigDict(
+        env_file=".env",          # used only locally
+        env_file_encoding="utf-8",
+        extra="ignore"            # ignore unknown env vars
+    )
+
+
+# Create a single settings instance
 settings = Settings()
+
+
+# --- DEBUG (remove after testing) ---
+print("🚀 CONFIG LOADED")
+print("GEMINI_API_KEY:", settings.GEMINI_API_KEY[:10] if settings.GEMINI_API_KEY else None)
+print("DATABASE_URL:", "SET" if settings.DATABASE_URL else "MISSING")
+print("REDIS_URL:", "SET" if settings.REDIS_URL else "MISSING")
