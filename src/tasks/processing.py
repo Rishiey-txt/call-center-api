@@ -35,8 +35,8 @@ def process_call(self, audio_base64: str, language: str, call_id: str) -> dict:
         }
         
         # Mathematical Isolation (computed AFTER LLM returns, strictly from the booleans)
-        compliance_score = round(sum(sop_bools.values()) / 5.0, 1)
-        adherence_status = "FOLLOWED" if all(sop_bools.values()) else "NOT_FOLLOWED"
+        compliance_score = float(compute_compliance_score(sop_bools))
+        adherence_status = str(determine_adherence(sop_bools))
 
         keywords = validate_keywords(
             analysis.get("keywords", []),
