@@ -2,7 +2,7 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     # Auth
-    API_KEY: str
+    API_KEY: str = "default_key"
 
     # Database
     DATABASE_URL: str = "postgresql+asyncpg://user:pass@localhost:5432/callcenter"
