@@ -1,8 +1,9 @@
-import google.generativeai as genai
+from google import genai
+from google.genai import types
 import json
 from src.config import settings
 
-genai.configure(api_key=settings.GEMINI_API_KEY)
+client = genai.Client(api_key=settings.GEMINI_API_KEY)
 
 SYSTEM_PROMPT = """
 You are a call center compliance analyzer for an Indian education institution.
@@ -30,20 +31,24 @@ SOP stage definitions:
 - problemStatement: Agent explained the purpose of the call clearly (outstanding dues, course inquiry, etc.)
 - solutionOffering: Agent proposed a specific solution (EMI plan, course details, discount, payment option)
 - closing: Agent ended with thank you / goodbye / next-step commitment
+
+adherenceStatus: "FOLLOWED" only when ALL 5 stages are true. Otherwise "NOT_FOLLOWED".
+paymentPreference: Choose based on what the customer agreed to or showed intent toward.
+rejectionReason: "NONE" if payment was agreed to. Otherwise pick the closest reason.
+keywords: Must be substrings or direct derivations of words in the transcript. Do not invent keywords.
+summary: Must be in English regardless of the transcript language.
 """
 
 def analyze_transcript(transcript: str, language: str) -> dict:
     try:
-        model = genai.GenerativeModel(
-            model_name="models/gemini-2.0-flash",
-            generation_config=genai.GenerationConfig(
+        response = client.models.generate_content(
+            model="gemini-2.0-flash",
+            config=types.GenerateContentConfig(
+                system_instruction=SYSTEM_PROMPT,
                 response_mime_type="application/json",
                 temperature=0.1,
             ),
-            system_instruction=SYSTEM_PROMPT,
-        )
-        response = model.generate_content(
-            f"Language: {language}\n\nTranscript:\n{transcript}"
+            contents=f"Language: {language}\n\nTranscript:\n{transcript}"
         )
         return json.loads(response.text)
     except Exception as e:
