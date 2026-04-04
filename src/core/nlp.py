@@ -1,18 +1,10 @@
+from google import genai
+from google.genai import types
 import json
-import google.generativeai as genai
-from groq import Groq
-from config import settings
+from src.config import settings
 
+client = genai.Client(api_key=settings.GEMINI_API_KEY)
 
-# --- Configure Gemini ---
-genai.configure(api_key=settings.GEMINI_API_KEY)
-gemini_model = genai.GenerativeModel("gemini-1.5-flash")
-
-# --- Configure Groq ---
-groq_client = Groq(api_key=settings.GROQ_API_KEY)
-
-
-# --- Your SYSTEM PROMPT (keep yours if already defined) ---
 SYSTEM_PROMPT = """
 You are a call center compliance analyzer for an Indian education institution.
 Given a transcript of a customer service call, return ONLY valid JSON with this exact structure. No markdown. No explanation.
@@ -47,95 +39,17 @@ keywords: Must be substrings or direct derivations of words in the transcript. D
 summary: Must be in English regardless of the transcript language.
 """
 
-
-
-# --- Build messages ---
-def build_messages(transcript: str):
-    return [
-        {"role": "system", "content": SYSTEM_PROMPT},
-        {"role": "user", "content": transcript}
-    ]
-
-
-# --- Gemini ---
-def analyze_with_gemini(messages):
-    print("🚀 Trying Gemini...")
-
-    # Gemini doesn't use chat format like OpenAI/Groq
-    prompt = f"{SYSTEM_PROMPT}\n\nTranscript:\n{messages[1]['content']}"
-
-    response = gemini_model.generate_content(prompt)
-
-    return response.text
-
-
-# --- Groq ---
-def analyze_with_groq(messages):
-    print("⚡ Falling back to Groq...")
-
-    response = groq_client.chat.completions.create(
-        model="llama3-70b-8192",
-        messages=messages,
-        temperature=0.3,
-    )
-
-    return response.choices[0].message.content
-
-
-# --- Safe JSON parser ---
-def safe_parse(text: str):
+def analyze_transcript(transcript: str, language: str) -> dict:
     try:
-        return json.loads(text)
-    except Exception:
-        print("❌ JSON parse failed")
-        return None
-
-
-# --- Heuristic fallback ---
-def heuristic_analysis():
-    return {
-        "summary": "Fallback summary",
-        "sop_validation": {
-            "greeting": False,
-            "identification": False,
-            "problemStatement": False,
-            "solutionOffering": False,
-            "closing": False,
-            "complianceScore": 0.0,
-            "adherenceStatus": "NOT_FOLLOWED",
-            "explanation": "Fallback mode"
-        },
-        "analytics": {
-            "paymentPreference": "NONE",
-            "rejectionReason": "NONE",
-            "sentiment": "Neutral"
-        },
-        "keywords": []
-    }
-
-
-# --- MAIN FUNCTION ---
-def analyze_transcript(transcript: str, language: str):
-    messages = build_messages(transcript)
-
-    # 1️⃣ Gemini
-    try:
-        result = analyze_with_gemini(messages)
-        parsed = safe_parse(result)
-        if parsed:
-            return parsed
+        response = client.models.generate_content(
+            model="gemini-2.0-flash",
+            config=types.GenerateContentConfig(
+                system_instruction=SYSTEM_PROMPT,
+                response_mime_type="application/json",
+                temperature=0.1,
+            ),
+            contents=f"Language: {language}\n\nTranscript:\n{transcript}"
+        )
+        return json.loads(response.text)
     except Exception as e:
-        print("❌ Gemini failed:", e)
-
-    # 2️⃣ Groq fallback
-    try:
-        result = analyze_with_groq(messages)
-        parsed = safe_parse(result)
-        if parsed:
-            return parsed
-    except Exception as e:
-        print("❌ Groq failed:", e)
-
-    # 3️⃣ Final fallback
-    print("🪫 Using heuristic fallback")
-    return heuristic_analysis()
+        raise RuntimeError(f"NLP analysis via Gemini failed: {str(e)}")
