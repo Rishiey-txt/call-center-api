@@ -16,12 +16,9 @@ class Settings(BaseSettings):
     # --- Storage ---
     CHROMA_PATH: str = "./chroma_db"
 
-    # --- Models ---
-    WHISPER_MODEL: str = "medium"
-
     # --- LLM Keys ---
     GEMINI_API_KEY: str
-    GROQ_API_KEY: str | None = None  # optional fallback
+    GROQ_API_KEY: str
 
     # --- Pydantic Config ---
     model_config = SettingsConfigDict(

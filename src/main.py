@@ -3,6 +3,8 @@ from fastapi import FastAPI
 from src.api.routes.analytics import router
 from src.core.vector_store import init_vector_store
 
+os.environ["ANONYMIZED_TELEMETRY"] = "False"
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     init_vector_store()      # warm up ChromaDB
