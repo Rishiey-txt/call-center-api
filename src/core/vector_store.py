@@ -7,7 +7,9 @@ _collection = None
 def init_vector_store():
     global _collection
     client = chromadb.PersistentClient(path=settings.CHROMA_PATH)
-    ef = embedding_functions.DefaultEmbeddingFunction()
+    ef = embedding_functions.SentenceTransformerEmbeddingFunction(
+        model_name="paraphrase-multilingual-MiniLM-L12-v2"
+    )
     _collection = client.get_or_create_collection(
         name="call_transcripts",
         embedding_function=ef,

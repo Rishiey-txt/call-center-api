@@ -33,10 +33,3 @@ class Settings(BaseSettings):
 
 # Create a single settings instance
 settings = Settings()
-
-
-# --- DEBUG (remove after testing) ---
-print("🚀 CONFIG LOADED")
-print("GEMINI_API_KEY:", settings.GEMINI_API_KEY[:10] if settings.GEMINI_API_KEY else None)
-print("DATABASE_URL:", "SET" if settings.DATABASE_URL else "MISSING")
-print("REDIS_URL:", "SET" if settings.REDIS_URL else "MISSING")
