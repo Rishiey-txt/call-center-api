@@ -15,7 +15,8 @@ def process_call(self, audio_base64: str, language: str, call_id: str) -> dict:
         try:
             # Dynamic NLP Analysis
             analysis = analyze_transcript(transcript, language)
-        except Exception:
+        except Exception as e:
+            print(f"⚠️ NLP PIPELINE FAILURE: {str(e)}", flush=True)
             analysis = {
                 "summary": transcript[:200] + " [truncated]",
                 "sop": heuristic_sop(transcript),
