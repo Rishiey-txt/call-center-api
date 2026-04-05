@@ -1,7 +1,9 @@
+import os
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from src.api.routes.analytics import router
 from src.core.vector_store import init_vector_store
+
 
 os.environ["ANONYMIZED_TELEMETRY"] = "False"
 
