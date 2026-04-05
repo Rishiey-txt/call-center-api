@@ -7,7 +7,6 @@ pydantic-settings==2.2.1
 sqlalchemy[asyncio]==2.0.30
 asyncpg==0.29.0
 alembic==1.13.1
-google-genai==0.8.0
 # chromadb: install without the heavy default embedding extras (onnxruntime, torch)
 # We supply our own lightweight embedding function in src/core/vector_store.py
 chromadb==0.5.0
