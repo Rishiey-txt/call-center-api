@@ -42,7 +42,7 @@ summary: Must be in English regardless of the transcript language.
 def analyze_transcript(transcript: str, language: str) -> dict:
     try:
         response = client.models.generate_content(
-            model="gemini-1.5-flash",
+            model="gemini-2.0-flash",
             config=types.GenerateContentConfig(
                 system_instruction=SYSTEM_PROMPT,
                 response_mime_type="application/json",
