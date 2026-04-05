@@ -1,13 +1,12 @@
-from google import genai
-from google.genai import types
+from groq import Groq
 import json
 from src.config import settings
 
-client = genai.Client(api_key=settings.GEMINI_API_KEY)
+client = Groq(api_key=settings.GROQ_API_KEY)
 
 SYSTEM_PROMPT = """
 You are a call center compliance analyzer for an Indian education institution.
-Given a transcript of a customer service call, return ONLY valid JSON with this exact structure. No markdown. No explanation.
+Given a transcript of a customer service call, return ONLY valid JSON with this exact structure. No markdown. No explanation. No extra text.
 
 {
   "summary": "2-3 sentence summary of the call in English",
@@ -32,7 +31,6 @@ SOP stage definitions:
 - solutionOffering: Agent proposed a specific solution (EMI plan, course details, discount, payment option)
 - closing: Agent ended with thank you / goodbye / next-step commitment
 
-adherenceStatus: "FOLLOWED" only when ALL 5 stages are true. Otherwise "NOT_FOLLOWED".
 paymentPreference: Choose based on what the customer agreed to or showed intent toward.
 rejectionReason: "NONE" if payment was agreed to. Otherwise pick the closest reason.
 keywords: Must be substrings or direct derivations of words in the transcript. Do not invent keywords.
@@ -41,15 +39,16 @@ summary: Must be in English regardless of the transcript language.
 
 def analyze_transcript(transcript: str, language: str) -> dict:
     try:
-        response = client.models.generate_content(
-            model="gemini-2.0-flash",
-            config=types.GenerateContentConfig(
-                system_instruction=SYSTEM_PROMPT,
-                response_mime_type="application/json",
-                temperature=0.1,
-            ),
-            contents=f"Language: {language}\n\nTranscript:\n{transcript}"
+        response = client.chat.completions.create(
+            model="llama-3.3-70b-versatile",
+            messages=[
+                {"role": "system", "content": SYSTEM_PROMPT},
+                {"role": "user", "content": f"Language: {language}\n\nTranscript:\n{transcript}"}
+            ],
+            temperature=0.1,
+            response_format={"type": "json_object"},
         )
-        return json.loads(response.text)
+        raw = response.choices[0].message.content
+        return json.loads(raw)
     except Exception as e:
-        raise RuntimeError(f"NLP analysis via Gemini failed: {str(e)}")
+        raise RuntimeError(f"NLP analysis via Groq failed: {str(e)}")
